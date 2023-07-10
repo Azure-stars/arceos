@@ -347,6 +347,7 @@ impl MemorySet {
             if area.contained_in(start, end) {
                 info!("  drop [{:?}, {:?})", area.vaddr, area.end_va());
                 // drop area
+                area.dealloc(&mut self.page_table);
                 drop(area);
             } else if area.strict_contain(start, end) {
                 info!(
@@ -546,9 +547,7 @@ impl MemorySet {
     /// 将用户分配的页面从页表中直接解映射，内核分配的页面依然保留
     pub fn unmap_user_areas(&mut self) {
         for (_, area) in &self.owned_mem {
-            self.page_table
-                .unmap_region(area.vaddr, area.size())
-                .unwrap();
+            area.dealloc(&mut self.page_table);
         }
         self.owned_mem.clear();
     }
